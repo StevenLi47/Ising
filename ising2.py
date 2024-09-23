@@ -94,8 +94,9 @@ class Ising:
         return plot
 
 
-temp, spins = default_params(84, 60)
-TS = Ising(spins, temp, 3000)
-plot = TS.energy_plot()
-print(TS.generate_FC(1500))
-plt.show()
+if __name__ == '__main__':
+    temp, spins = default_params(84, 60)
+    TS = Ising(spins, temp, 3000)
+    plot = TS.energy_plot()
+    print(TS.generate_FC(1500))
+    plt.show()

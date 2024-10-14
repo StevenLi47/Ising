@@ -1,0 +1,20 @@
+Sept 28:
+Critical temperature seems to be limit of correlation between simulated and empirical functional connectivity
+
+Values near the critical temperature give the closest results to the empirical FC
+
+The critical temperature can be estimated by plotting the standard deviation of the cumulative average energy per
+temperature
+
+Past the critical temperature, the ising model becomes chaotic with a total spin of 0. FC becomes unusable
+
+It is important to choose the number of steps for the metropolis algorithm carefully when using temperatures near the
+critical temperature, as the algorithm becomes chaotic only after a certain amount of steps
+
+The longer the algorithm spends in chaos, the more distorted the simulated FC becomes. Empirical data suggests that the
+FC spends a little bit of time in the "chaotic region" based on the distinct grid pattern
+
+oct.10
+Comparing FC matrix without diagonals
+Made new Jij without outlier data
+new time scale where each step is one random flip chance

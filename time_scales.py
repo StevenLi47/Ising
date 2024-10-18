@@ -38,7 +38,6 @@ def time_scale2(metropolis_step, spins):
         for i in range(84):
             index[i] = np.where(avg_connectome == sorted_connectome[i])[0][0]
 
-    timer = 0
     for i in index:
         dE = metropolis_step(i)
         if dE is not None:

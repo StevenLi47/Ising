@@ -6,6 +6,7 @@ import utils
 import time
 
 
+
 def default_temp(global_temp, size = 84):
     return np.ones(size) * global_temp
 
@@ -24,27 +25,26 @@ class Spins:
         else:
             self.spins = spin_matrix
         self.total_energy = self.hamiltonian()
+        self.mag = self.magnetization()
 
     def energy(self, i, j):
         return -2 * np.sum(self.Jij[i, j] * self.spins[i] * self.spins[j])
 
+    def magnetization(self):
+        self.mag = np.abs(np.sum(self.spins)) / self.size
+        return self.mag
+
     def find_dE(self, index):
+        temp_Jij = self.Jij[index]
         if isinstance(index, list):
-            energy = 0
-            for i in index:
-                energy -= 2 * (np.sum(self.Jij[i, :] * -self.spins[i] * self.spins) -
-                               np.sum(self.Jij[i, index] * -self.spins[i] * self.spins[index]))
-            return energy
+            temp_Jij[:, index] = 0
+            return -2 * np.sum(temp_Jij * (self.spins * -self.spins[index].reshape((np.size(index), 1))))
         else:
-            return -2 * np.sum(self.Jij[index, :] * -self.spins[index] * self.spins[:])
+            temp_Jij[index] = 0
+            return -2 * np.sum(temp_Jij * (self.spins * -self.spins[index]))
 
     def hamiltonian(self):
-        energy = 0
-
-        for i in range(self.size - 1):
-            energy -= 2 * np.sum(self.Jij[i, i + 1:] * self.spins[i] * self.spins[i + 1:])
-
-        return energy
+        return np.sum(self.Jij * (self.spins * self.spins.reshape((np.size(self.spins), 1))))
 
     def update(self, index, energy = None):
         if energy is None:
@@ -66,9 +66,12 @@ class Ising:
         self.sum_spin_series[0] = np.sum(self.spin.spins)
         self.energy_series = np.zeros(steps + 1)
         self.energy_series[0] = self.spin.total_energy
+        self.mag_series = np.zeros(steps + 1)
+        self.mag_series[0] = self.spin.magnetization()
         self.thermalization = thermalization
         self.metropolis()
         self.functional_connectivity = self.generate_FC()
+
 
     def metropolis(self):
         def metropolis_step(index, dE = None):
@@ -87,14 +90,21 @@ class Ising:
             self.spin_series[:, i] = self.spin.spins
             self.sum_spin_series[i] = np.sum(self.spin.spins)
             self.energy_series[i] = self.spin.total_energy
+            self.mag_series[i] = self.spin.magnetization()
         print('algorithm time:', timer)
 
     def generate_FC(self):
         self.functional_connectivity = np.corrcoef(self.spin_series[:, self.thermalization:])
         return self.functional_connectivity
 
+    def susceptibility(self, beta):
+        return (np.var(self.mag_series) * self.spin.size ** 2) * beta
+
+    def specific_heat(self, beta):
+        return (np.var(self.energy_series) * self.spin.size ** 2) * beta ** 2
+
     def average_series(self, series):
-        return np.cumsum(series) / self.iterations
+        return np.cumsum(series) / (self.iterations + 1)
 
     def series_deriv(self, series):
         return series[:-1] - series[1:]
@@ -102,17 +112,6 @@ class Ising:
     def st_dev(self):
         return np.std(self.average_series(self.energy_series)[self.thermalization:])
 
-    def spin_plot(self):
-        plot = plt.figure()
-        plt.scatter(self.iterations, self.sum_spin_series)
-        plt.scatter(self.iterations, self.average_series(self.sum_spin_series))
-        return plot
-
-    def energy_plot(self):
-        plot = plt.figure()
-        plt.scatter(self.iterations, self.energy_series)
-        plt.scatter(self.iterations, self.average_series(self.energy_series))
-        return plot
 
 
 if __name__ == '__main__':
